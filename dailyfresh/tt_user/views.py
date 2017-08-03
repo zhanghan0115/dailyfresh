@@ -1,17 +1,22 @@
-#coding=utf-8
+# coding=utf-8
+import datetime
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import JsonResponse
 from hashlib import sha1
 from . import models
-from _mysql import *
+
+
 # Create your views here.
+def index(request):
+    return render(request, 'tt_user/index.html')
+
 
 def register(request):
-    context={'title':'注册'}
-    return render(request, 'tt_user/register.html',context)
+    context = {'title': '注册','top':'0'}
+    return render(request, 'tt_user/register.html', context)
+
 
 def register_handle(request):
-
     zhuce = request.POST
     uname = zhuce.get('user_name')
     upwd = zhuce.get('pwd')
@@ -31,20 +36,117 @@ def register_handle(request):
     return redirect('/user/login/')
 
 
+def register_valid(request):
+    uname = request.GET.get('uname')
+    result = models.UserInfo.objects.filter(uname=uname).count()
+    context = {'valid': result}
+    return JsonResponse(context)
+
+
 def login(request):
-    context={'title':'登入'}
-    return render(request, 'tt_user/login.html',context)
+    uname= request.COOKIES.get('uname')
+    context = {'title': '登入','uanme':uname,'top':'0'}
+    return render(request, 'tt_user/login.html', context)
 
-def index(request):
-    return render(request,'tt_user/index.html')
 
-def user_info(request):
-    userInfo = request.POST
+# def user_info(request):
+#     user_info = request.POST
+#     useryanzhengname = user_info.get('username')
+#     useryanzhengpwd = user_info.get('pwd')
+#     s1 = sha1()
+#     s1.update(useryanzhengpwd)
+#     jiamipwd = s1.hexdigest()
+#     list = models.UserInfo.objects.filter(uname=useryanzhengname).filter(upwd=jiamipwd)
+#     print list
+#     if len(list)==0:
+#         return render()
+#     else:
+#         # context={'username':useryanzhengname}
+#         return render(request, 'tt_user/index.html')
 
-    conn = connect(host='localhost', port=3306, user='root', password='mysql', database='dailyfresh', charset='utf8')
-    cs1 = conn.cursor()
-    count = cs1.execute('select uname from tt_user_userinfo')
-    result = cs1.fetchall()
-    if userInfo.username == result[0]:
-        render(request,'tt_user/index.html')
+def login_handle(request):
+    post = request.POST
+    useryanzhengname = post.get('username')
+    useryanzhengpwd = post.get('pwd')
+    jizhu_username = post.get('jizhu_username', '0')
+    s1 = sha1()
+    s1.update(useryanzhengpwd)
+    jiamipwd = s1.hexdigest()
+    context = {'title': '登入', 'uname': useryanzhengname, 'upwd': useryanzhengpwd,'top':'0'}
+    users = models.UserInfo.objects.filter(uname=useryanzhengname)
+    if len(users) == 0:
+        context['name_error'] = '1'
+        return render(request, 'tt_user/login.html/',context)
+    else:
+        if users[0].upwd == jiamipwd:
+            request.session['uid'] = users[0].id
+            request.session['uname'] = useryanzhengname
+            path = request.session.get('url_path', '/')
+            response = redirect(path)
+            if jizhu_username == '1':
+                response.set_cookie('uanme', useryanzhengname, expires=datetime.datetime.now() + datetime.timedelta(days=7))
+            else:
+                response.set_cookie('uname','',max_age=-1)
+            return response
+        else:
+            context['pwd_error']='1'
+            return render(request,'tt_user/login.html',context)
+
+def user_islogin(func):
+    def func1(request,*args,**kwargs):
+        if request.session.has_key('uid'):
+            return func(request,*args,**kwargs)
+        else:
+            return redirect('/user/login/')
+    return func1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
