@@ -7,12 +7,8 @@ from . import models
 
 
 # Create your views here.
-def index(request):
-    return render(request, 'tt_user/index.html')
-
-
 def register(request):
-    context = {'title': '注册','top':'0'}
+    context = {'title': '注册', 'top': '0'}
     return render(request, 'tt_user/register.html', context)
 
 
@@ -44,8 +40,8 @@ def register_valid(request):
 
 
 def login(request):
-    uname= request.COOKIES.get('uname')
-    context = {'title': '登入','uanme':uname,'top':'0'}
+    uname = request.COOKIES.get('uname')
+    context = {'title': '登入', 'uanme': uname, 'top': '0'}
     return render(request, 'tt_user/login.html', context)
 
 
@@ -72,81 +68,65 @@ def login_handle(request):
     s1 = sha1()
     s1.update(useryanzhengpwd)
     jiamipwd = s1.hexdigest()
-    context = {'title': '登入', 'uname': useryanzhengname, 'upwd': useryanzhengpwd,'top':'0'}
+    context = {'title': '登入', 'uname': useryanzhengname, 'upwd': useryanzhengpwd, 'top': '0'}
     users = models.UserInfo.objects.filter(uname=useryanzhengname)
     if len(users) == 0:
         context['name_error'] = '1'
-        return render(request, 'tt_user/login.html/',context)
+        return render(request, 'tt_user/login.html/', context)
     else:
         if users[0].upwd == jiamipwd:
             request.session['uid'] = users[0].id
             request.session['uname'] = useryanzhengname
-            path = request.session.get('url_path', '/')
+            path = request.session.get('url_path', '/')#中间件
             response = redirect(path)
             if jizhu_username == '1':
-                response.set_cookie('uanme', useryanzhengname, expires=datetime.datetime.now() + datetime.timedelta(days=7))
+                response.set_cookie('uanme', useryanzhengname,
+                                    expires=datetime.datetime.now() + datetime.timedelta(days=7))
             else:
-                response.set_cookie('uname','',max_age=-1)
+                response.set_cookie('uname', '', max_age=-1)
             return response
         else:
-            context['pwd_error']='1'
-            return render(request,'tt_user/login.html',context)
+            context['pwd_error'] = '1'
+            return render(request, 'tt_user/login.html', context)
+
 
 def user_islogin(func):
-    def func1(request,*args,**kwargs):
+    def func1(request, *args, **kwargs):
         if request.session.has_key('uid'):
-            return func(request,*args,**kwargs)
+            return func(request, *args, **kwargs)
         else:
             return redirect('/user/login/')
+
     return func1
 
 
+@user_islogin
+def user_center(request):
+    user = models.UserInfo.objects.get(pk=request.session['uid'])
+    context = {'title': '用户中心', 'user': user}
+    return render(request, 'tt_user/user_center_info.html', context)
 
 
+@user_islogin
+def user_order(request):
+    user = models.UserInfo.objects.get(pk=request.session['uid'])
+    context = {'title': '订单中心', 'user': user}
+    return render(request, 'tt_user/user_center_info.html', context)
 
 
+@user_islogin
+def user_site(request):
+    user = models.UserInfo.objects.get(pk=request.session['uid'])
+    if request.method == 'POST':
+        post = request.POST
+        user.ushou = post.get('ushou')
+        user.uaddress = post.get('uaddress')
+        user.uphone = post.get('uphone')
+        user.save()
+    context = {'title': '收货地址', 'user': user}
+    return render(request, 'tt_user/user_center_site.html/', context)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def user_loginout(request):
+    request.session.flush()
+    return redirect('/user/login/')
