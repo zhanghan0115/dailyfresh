@@ -16,7 +16,7 @@
                 </ul>
             </div>
             <ul class="navlist fl">
-                <li><a href="">首页</a></li>
+                <li><a href="/">首页</a></li>
                 <li class="interval">|</li>
                 <li><a href="">手机生鲜</a></li>
                 <li class="interval">|</li>
@@ -30,6 +30,7 @@
 
     {% endblock breadcrum %}
 
+    {% if isleft|default:'1' == '1'%}
     <div class="main_wrap clearfix">
     <div class="l_wrap fl clearfix">
         <div class="new_goods">
@@ -43,20 +44,15 @@
                     <div class="prize">￥{{ a.gprice }}</div>
                 </li>
                 {% endfor %}
-{#                <li>#}
-{#                    <a href="#"><img src="/static/images/goods/goods002.jpg"></a>#}
-{#                    <h4><a href="#">玫瑰香葡萄</a></h4>#}
-{#                    <div class="prize">￥16.80</div>#}
-{#                </li>#}
+
             </ul>
         </div>
     </div>
     {% block r_wrap %}
 
     {% endblock r_wrap %}
-
-
-
+</div>
+    {% endif %}
 {% endblock body %}
 
 

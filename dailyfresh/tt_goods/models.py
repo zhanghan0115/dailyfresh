@@ -4,9 +4,6 @@ from tinymce.models import HTMLField
 # Create your models here.
 
 
-
-
-
 class TypeInfo(models.Model):
     # 分类名称
     ttitle = models.CharField(max_length=20)
