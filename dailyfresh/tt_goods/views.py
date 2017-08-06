@@ -38,6 +38,9 @@ def goods_list(request, type_id, page_index,order_by):
 
     page = paginator.page(int(page_index))
 
+
+
+
     plist = paginator.page_range  # 页码列表
     if paginator.num_pages > 5:
         if page_index <= 2:
@@ -52,6 +55,8 @@ def goods_list(request, type_id, page_index,order_by):
     return render(request, 'tt_goods/list.html', context)
 
 
+
+
 def detail(request,gid):
     try:
         goods = GoodsInfo.objects.get(pk=gid)
@@ -62,3 +67,21 @@ def detail(request,gid):
         return render(request,'tt_goods/detail.html',context)
     except:
         return render(request, '404.html')
+
+
+
+from haystack.generic_views import SearchView
+
+class MySearchView(SearchView):
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(MySearchView, self).get_context_data(*args, **kwargs)
+
+        context['title']='搜索结果'
+        context['cart'] = '1'
+        context['isleft'] = '0'
+
+        return context
+
+
+
